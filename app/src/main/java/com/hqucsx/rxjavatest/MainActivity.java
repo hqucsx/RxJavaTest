@@ -1,12 +1,24 @@
 package com.hqucsx.rxjavatest;
 
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatButton;
 import android.support.v7.widget.AppCompatEditText;
+import android.support.v7.widget.AppCompatImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.hqucsx.rxjavatest.data.DataFactory;
+import com.hqucsx.rxjavatest.model.Course;
+import com.hqucsx.rxjavatest.model.Student;
+import com.jakewharton.rxbinding.view.RxView;
+import com.jakewharton.rxbinding.widget.RxTextView;
+import com.jakewharton.rxbinding.widget.TextViewTextChangeEvent;
 import com.orhanobut.logger.Logger;
+
+import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -14,8 +26,11 @@ import butterknife.OnClick;
 import rx.Observable;
 import rx.Observer;
 import rx.Subscriber;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action0;
 import rx.functions.Action1;
+import rx.functions.Func1;
+import rx.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -25,18 +40,22 @@ public class MainActivity extends AppCompatActivity {
     AppCompatButton mBtnMessage;
     @BindView(R.id.tv_message)
     TextView mTvMessage;
+    @BindView(R.id.iv_message)
+    AppCompatImageView mIvMessage;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        rxBindingTest10();
     }
 
     @OnClick(R.id.btn_message)
     public void onClick() {
-        rxTest3();
+//        rxTest5();
         Logger.i("开始使用RxJava");
+        rxBindingTest9();
     }
 
     /**
@@ -168,6 +187,178 @@ public class MainActivity extends AppCompatActivity {
          * 不完全定义方式订阅回调
          * 自动创建Subscribe，并使用onNextAction,onErrorAction,onCompletedAction分别来定义onNext(),onError(),onCompleted()
          */
-        observable.subscribe(onNextAction,onErrorAction,onCompletedAction);
+        observable.subscribe(onNextAction, onErrorAction, onCompletedAction);
     }
+
+    /**
+     * Scheduler线程控制
+     */
+    private void rxTest4() {
+        /**
+         * 在io线程读取Drawable
+         * 在主线程显示Drawable
+         * subscribeOn()只执行一次(第一次)
+         * observeOn()可执行多次
+         */
+//        Observable.create(new Observable.OnSubscribe<Drawable>() {
+//            @Override
+//            public void call(Subscriber<? super Drawable> subscriber) {
+//                Drawable drawable = ContextCompat.getDrawable(MainActivity.this, R.mipmap.ic_launcher);
+//                subscriber.onNext(drawable);
+//            }
+//        }).subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(new Subscriber<Drawable>() {
+//                    @Override
+//                    public void onCompleted() {
+//
+//                    }
+//
+//                    @Override
+//                    public void onError(Throwable e) {
+//
+//                    }
+//
+//                    @Override
+//                    public void onNext(Drawable drawable) {
+//                        mIvMessage.setImageDrawable(drawable);
+//                    }
+//                });
+        /**
+         * 使用just+不完全定义的方式简写
+         */
+        Observable.just(ContextCompat.getDrawable(this, R.mipmap.ic_launcher))
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Drawable>() {
+                    @Override
+                    public void call(Drawable drawable) {
+                        mIvMessage.setBackgroundDrawable(drawable);
+                    }
+                });
+    }
+
+    /**
+     * 变化map,通过map操作将图片id直接作为参数传入
+     */
+    private void rxTest5() {
+        /**
+         * 使用map变换()
+         */
+        Observable.just(R.mipmap.ic_launcher)
+                .map(new Func1<Integer, Drawable>() {
+                    @Override
+                    public Drawable call(Integer integer) {
+                        return ContextCompat.getDrawable(MainActivity.this, integer);
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Drawable>() {
+                    @Override
+                    public void call(Drawable drawable) {
+                        mIvMessage.setBackgroundDrawable(drawable);
+                    }
+                });
+    }
+
+    /**
+     * 实例练习,获取学生的名字
+     */
+    private void rxTest6() {
+        Observable.from(DataFactory.getData())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Student>() {
+                    @Override
+                    public void call(Student student) {
+                        mTvMessage.append(student.toString() + "\n");
+                    }
+                });
+    }
+
+    /**
+     * 使用map变换获取学生的的姓名
+     */
+    private void rxTest7() {
+        Observable.from(DataFactory.getData())
+                .map(new Func1<Student, String>() {
+                    @Override
+                    public String call(Student student) {
+                        return student.name;
+                    }
+                })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        mTvMessage.append(s + "\n");
+                    }
+                });
+
+    }
+
+    /**
+     * 使用flatMap变换获取学生的课程的名称
+     */
+    private void rxTest8() {
+        Observable.from(DataFactory.getData())
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .flatMap(new Func1<Student, Observable<Course>>() {
+                    @Override
+                    public Observable<Course> call(Student student) {
+                        mTvMessage.append(student.name + "\n");
+                        return Observable.from(student.courses);
+                    }
+                })
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(new Func1<Course, String>() {
+                    @Override
+                    public String call(Course course) {
+                        return course.name;
+                    }
+                })
+                .subscribe(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        mTvMessage.append(s + "\n");
+                    }
+                });
+
+    }
+
+    /**
+     * 引入RxBinding-------------------------------------------------
+     */
+    /**
+     * 引入RxBinding,防抖动,即多次点击
+     */
+    private void rxBindingTest9(){
+        RxView.clicks(mIvMessage)
+                .throttleFirst(1000, TimeUnit.MILLISECONDS)
+                .subscribe(new Action1<Void>() {
+                    @Override
+                    public void call(Void aVoid) {
+                        Toast.makeText(MainActivity.this,"哈哈哈",Toast.LENGTH_SHORT).show();
+                    }
+                });
+    }
+
+    /**
+     * 每一秒监听EditText的内容变换,并作出响应
+     */
+    private void rxBindingTest10(){
+        RxTextView.textChangeEvents(mEtMessage)
+                .debounce(1000,TimeUnit.MILLISECONDS)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<TextViewTextChangeEvent>() {
+                    @Override
+                    public void call(TextViewTextChangeEvent textViewTextChangeEvent) {
+                        mTvMessage.setText(textViewTextChangeEvent.text().toString());
+                    }
+                });
+    }
+
+
 }
