@@ -53,9 +53,9 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.btn_message)
     public void onClick() {
-//        rxTest5();
+        rxTest8();
         Logger.i("开始使用RxJava");
-        rxRangeTest11();
+//        rxRangeTest11();
     }
 
     /**
@@ -309,6 +309,10 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * 使用flatMap变换获取学生的课程的名称
+     * filter()过滤掉不需要的结果
+     * take(int)输出最多指定数量的结果
+     * doOnNext()执行在subscribe之前
+     *
      */
     private void rxTest8() {
         Observable.from(DataFactory.getData())
@@ -320,11 +324,24 @@ public class MainActivity extends AppCompatActivity {
                         return Observable.from(student.courses);
                     }
                 })
+                .filter(new Func1<Course, Boolean>() {
+                    @Override
+                    public Boolean call(Course course) {
+                        return course!=null;
+                    }
+                })
+                .take(2)
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(new Func1<Course, String>() {
                     @Override
                     public String call(Course course) {
                         return course.name;
+                    }
+                })
+                .doOnNext(new Action1<String>() {
+                    @Override
+                    public void call(String s) {
+                        mTvMessage.append(s+"\n");
                     }
                 })
                 .subscribe(new Action1<String>() {
@@ -385,7 +402,4 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
-
-
-
 }

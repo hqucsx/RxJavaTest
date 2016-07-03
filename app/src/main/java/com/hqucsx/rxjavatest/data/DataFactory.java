@@ -83,6 +83,10 @@ public class DataFactory {
                 course = new Course();
                 course.id = j;
                 course.name = new StringBuffer(student.name).append("的课程").append((j+1)).toString();
+                if (j==1) {
+                    courses.add(null);
+                    continue;
+                }
                 courses.add(course);
             }
 
