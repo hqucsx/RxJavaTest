@@ -55,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     public void onClick() {
 //        rxTest5();
         Logger.i("开始使用RxJava");
-        rxBindingTest9();
+        rxRangeTest11();
     }
 
     /**
@@ -104,6 +104,7 @@ public class MainActivity extends AppCompatActivity {
                 Logger.i(s);
             }
         };
+
         /**
          * 订阅，需要在onStop或者onDestroy的时候解除订阅
          */
@@ -184,6 +185,9 @@ public class MainActivity extends AppCompatActivity {
         };
 
         /**
+         * 不完全定义方法的顺序为next,error,complete
+         */
+        /**
          * 不完全定义方式订阅回调
          * 自动创建Subscribe，并使用onNextAction,onErrorAction,onCompletedAction分别来定义onNext(),onError(),onCompleted()
          */
@@ -226,6 +230,7 @@ public class MainActivity extends AppCompatActivity {
 //                });
         /**
          * 使用just+不完全定义的方式简写
+         *
          */
         Observable.just(ContextCompat.getDrawable(this, R.mipmap.ic_launcher))
                 .subscribeOn(Schedulers.io())
@@ -264,8 +269,11 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * 实例练习,获取学生的名字
+     * (from类似just
+     * from操作的是集合,just操作的是数据序列)
      */
     private void rxTest6() {
+
         Observable.from(DataFactory.getData())
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -359,6 +367,25 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    /**
+     * range
+     * 操作符Range,根据输入的初始值n和数目m发射出的一系列大于等于n的m个值
+     * 例如:n=4,m=1,则输出结果为4
+     * 使用非常方便,只需指定初始值和需要输出的数值的数目
+     */
+    private void rxRangeTest11(){
+        Observable.range(4,1)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Action1<Integer>() {
+                    @Override
+                    public void call(Integer integer) {
+                        mTvMessage.append(integer+"\n");
+                    }
+                });
+    }
+
 
 
 }
