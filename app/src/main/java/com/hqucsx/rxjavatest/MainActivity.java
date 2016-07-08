@@ -31,6 +31,7 @@ import rx.functions.Action0;
 import rx.functions.Action1;
 import rx.functions.Func1;
 import rx.schedulers.Schedulers;
+import rx.subjects.AsyncSubject;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,9 +54,10 @@ public class MainActivity extends AppCompatActivity {
 
     @OnClick(R.id.btn_message)
     public void onClick() {
-        rxTest8();
+//        rxTest8();
         Logger.i("开始使用RxJava");
 //        rxRangeTest11();
+        rxPublishSubjectTest12();
     }
 
     /**
@@ -402,4 +404,52 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
     }
+
+    /**
+     * Subject是一个神奇的对象，他可以是Observable也可以是Observer
+     * RxJava提供了四种不同的Subject
+     * {
+     *     PublishSubject   等待数据发送，不阻塞线程，也不消耗资源，随时准备接收数据
+     *     BehaviorSubject  会首先向他的订阅者发送截至订阅前最新的一个数据对象，然后正常发送订阅后的数据流
+     *     ReplaySubject    会缓存它锁订阅的所有数据，向任意一个订阅它的观察者重发。
+     *     AsyncSubject     当Observable完成时，只会发布最后一个数据给已经订阅的每一个观察者
+     * }
+     */
+    private void rxPublishSubjectTest12(){
+
+//        PublishSubject<String> publishSubject = PublishSubject.create()
+        /**
+         * 会首先发送“啦啦啦”字符串
+         */
+//        BehaviorSubject<String> publishSubject = BehaviorSubject.create("啦啦啦");
+        /**
+         *
+         */
+//        ReplaySubject publishSubject = ReplaySubject.create();
+        /**
+         * 调用两次onNext()只执行最后一次，如果没有执行onCompleted()，则一次都不会执行
+         * 只有在调用onCompleted()时才不送最后一条数据
+         */
+        AsyncSubject<String> publishSubject = AsyncSubject.create();
+        publishSubject.subscribe(new Observer<String>() {
+            @Override
+            public void onCompleted() {
+
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onNext(String s) {
+                mTvMessage.append(s);
+            }
+        });
+        publishSubject.onNext("哈哈哈");
+        publishSubject.onNext("嘻嘻嘻");
+        publishSubject.onCompleted();
+    }
 }
+

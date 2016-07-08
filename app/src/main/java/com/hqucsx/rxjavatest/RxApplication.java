@@ -4,6 +4,7 @@ package com.hqucsx.rxjavatest;/**
 
 import android.app.Application;
 
+import com.github.mmin18.layoutcast.LayoutCast;
 import com.orhanobut.logger.LogLevel;
 import com.orhanobut.logger.Logger;
 
@@ -22,5 +23,10 @@ public class RxApplication extends Application {
                 .methodCount(3)                 // default 2
                 .hideThreadInfo()               // default shown
                 .logLevel(LogLevel.FULL);        // default LogLevel.FULL
+        super.onCreate();
+
+        if (BuildConfig.DEBUG) {
+            LayoutCast.init(this);
+        }
     }
 }
