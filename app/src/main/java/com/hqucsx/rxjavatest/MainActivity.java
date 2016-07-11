@@ -1,5 +1,6 @@
 package com.hqucsx.rxjavatest;
 
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
@@ -57,7 +58,8 @@ public class MainActivity extends AppCompatActivity {
 //        rxTest8();
         Logger.i("开始使用RxJava");
 //        rxRangeTest11();
-        rxPublishSubjectTest12();
+//        rxPublishSubjectTest12();
+        startActivity(new Intent(this,AppsActivity.class));
     }
 
     /**
@@ -311,10 +313,22 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * 使用flatMap变换获取学生的课程的名称
+     *
+     * *****过滤出我们想要的数据的方法列表*********************
      * filter()过滤掉不需要的结果
      * take(int)输出最多指定数量的结果
+     * task(int last) 取列表的尾部指定数量的结果
      * doOnNext()执行在subscribe之前
-     *
+     * first()只发射第一个元素
+     * last()只发射最后一个元素
+     * repeat(long ) 元素重复次数
+     * distinct()去除重复元素
+     * skip(int) 不发射列表前面指定数量的元素
+     * skipLast(int) 不发射列表后面指定数量的元素
+     * elementAt(position) 只发射指定位置的元素
+     * sample(time,TimeUnit.SECONDS)每隔指定时间发送一个元素
+     * timeout(time,TimeUnit.SECONDS)每隔指定事件发送一个元素，如果没有得到一个值，则发射一个错误（如果在指定时间内不发射，则会触发onError()）
+     * debounce(time,TimeUnit.SECONDS)如果Observable发射速率过快，则过滤掉发射间隔内容的数据，如果已经发射完成，并且到了新的发射时间点，仍然没有数据发射，则发射最后一个数据
      */
     private void rxTest8() {
         Observable.from(DataFactory.getData())
@@ -332,7 +346,9 @@ public class MainActivity extends AppCompatActivity {
                         return course!=null;
                     }
                 })
-                .take(2)
+                .takeLast(4)
+                .repeat(2)
+                .distinct()
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(new Func1<Course, String>() {
                     @Override
@@ -343,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
                 .doOnNext(new Action1<String>() {
                     @Override
                     public void call(String s) {
-                        mTvMessage.append(s+"\n");
+//                        mTvMessage.append(s+"\n");
                     }
                 })
                 .subscribe(new Action1<String>() {
@@ -354,6 +370,7 @@ public class MainActivity extends AppCompatActivity {
                 });
 
     }
+
 
     /**
      * 引入RxBinding-------------------------------------------------
